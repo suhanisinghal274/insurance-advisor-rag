@@ -3,7 +3,8 @@
 Metrics (one row per question is saved to eval/results/results.csv):
 - Retrieval recall@k: the expected policy section is among the top-k retrieved sections
 - MRR: mean reciprocal rank of the expected section
-- Answer accuracy: answerable questions answered (not escalated) and containing every expected keyword
+- Answer accuracy: answerable questions answered (not escalated) and containing every expected keyword,
+  after normalising text (Unicode spaces such as U+202F, "25 %" -> "25%", markdown bold, case)
 - Escalation precision / recall: how well it hands off questions the documents can't answer
 - Task completion: correct answer OR correct hand-off, over all questions
 - Latency: p50 and p95 per question, in milliseconds
@@ -15,9 +16,18 @@ import json
 import re
 import statistics
 import time
+import unicodedata
 
 from src import config
 from src.rag import AdvisorAssistant, QuotaExhausted
+
+
+def normalise(text):
+    """Make keyword matching robust to formatting, not wording: models often write "25 %" with a
+    narrow no-break space, or wrap numbers in **bold**. Different wording still counts as a miss."""
+    text = unicodedata.normalize("NFKC", text).replace("*", "").lower()
+    text = re.sub(r"\s+", " ", text)
+    return re.sub(r"(\d) %", r"\1%", text)
 
 
 def percentile(values, p):
@@ -66,7 +76,7 @@ def run():
             exp = t["expected_section"]
             row["retrieved"] = exp in ids
             row["rr"] = 1 / (ids.index(exp) + 1) if exp in ids else 0.0
-            row["correct"] = (not out["escalated"]) and all(k.lower() in out["answer"].lower() for k in t["keywords"])
+            row["correct"] = (not out["escalated"]) and all(normalise(k) in normalise(out["answer"]) for k in t["keywords"])
         else:
             row["retrieved"], row["rr"] = None, None
             row["correct"] = out["escalated"]

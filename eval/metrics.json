@@ -1,0 +1,18 @@
+{
+  "questions": 30,
+  "retrieval_recall_at_k": 1.0,
+  "mrr": 0.9479166666666666,
+  "answer_accuracy": 0.7916666666666666,
+  "escalation_precision": 1.0,
+  "escalation_recall": 1.0,
+  "task_completion": 0.8333333333333334,
+  "latency_p50_ms": 479.3,
+  "latency_p95_ms": 837.9,
+  "settings": {
+    "embeddings": "minilm",
+    "llm": "groq",
+    "model": "openai/gpt-oss-120b",
+    "top_k": 4,
+    "escalate_below": 0.35
+  }
+}
