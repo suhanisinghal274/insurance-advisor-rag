@@ -13,6 +13,7 @@ Run:  python -m src.evaluate
 import csv
 import json
 import statistics
+import time
 
 from src import config
 from src.rag import AdvisorAssistant
@@ -28,7 +29,9 @@ def run():
     tests = json.loads(config.TEST_SET.read_text(encoding="utf-8"))
     bot = AdvisorAssistant(persist=False)
     rows = []
-    for t in tests:
+    for i, t in enumerate(tests):
+        if i and config.LLM_BACKEND == "gemini":
+            time.sleep(config.EVAL_DELAY_S)  # stay under free-tier per-minute limits (not counted in latency)
         out = bot.answer(t["question"])
         ids = [s["id"] for s in out["sources"]]
         row = {"id": t["id"], "question": t["question"], "answerable": t["answerable"],

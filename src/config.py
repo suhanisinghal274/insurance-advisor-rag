@@ -18,6 +18,10 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
 TOP_K = int(os.getenv("TOP_K", "4"))
 
+# Free-tier keys have per-minute limits: retry temporary errors, and pause between evaluation questions
+MAX_RETRIES = int(os.getenv("MAX_RETRIES", "4"))
+EVAL_DELAY_S = float(os.getenv("EVAL_DELAY_S", "4"))
+
 # Hand off to a human advisor when the best retrieved section scores below this
 # (cosine similarity). Tune it with the evaluation script.
 DEFAULT_THRESHOLDS = {"minilm": 0.35, "tfidf": 0.12}

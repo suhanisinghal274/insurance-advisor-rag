@@ -21,12 +21,23 @@ class GeminiLLM:
         self.client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     def __call__(self, prompt):
-        resp = self.client.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=prompt,
-            config=self.genai.types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT, temperature=0.0),
-        )
-        return (resp.text or "").strip()
+        from google.genai import errors
+        # Retry on rate limits (429) and temporary overload (500/503), waiting 5s, 10s, 20s, 40s
+        for attempt in range(config.MAX_RETRIES + 1):
+            try:
+                resp = self.client.models.generate_content(
+                    model=config.GEMINI_MODEL,
+                    contents=prompt,
+                    config=self.genai.types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT, temperature=0.0),
+                )
+                return (resp.text or "").strip()
+            except errors.APIError as e:
+                if e.code in (429, 500, 503) and attempt < config.MAX_RETRIES:
+                    wait = 5 * 2 ** attempt
+                    print(f"Gemini returned {e.code}; retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+                raise
 
 
 class MockLLM:
