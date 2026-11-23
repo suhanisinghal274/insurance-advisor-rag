@@ -52,7 +52,7 @@ docker run -p 7860:7860 -e GEMINI_API_KEY=your_key insurance-advisor-rag
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Answer model |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Answer model |
 | `TOP_K` | `4` | Sections retrieved per question |
 | `ESCALATE_BELOW` | `0.35` | Hand off if the best section scores below this |
 | `EMBEDDING_BACKEND` | `minilm` | `minilm` or `tfidf` (offline) |
