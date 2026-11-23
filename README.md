@@ -59,7 +59,7 @@ docker run -p 7860:7860 -e GEMINI_API_KEY=your_key insurance-advisor-rag
 | `ESCALATE_BELOW` | `0.35` | Hand off if the best section scores below this |
 | `EMBEDDING_BACKEND` | `minilm` | `minilm` or `tfidf` (offline) |
 | `LLM_BACKEND` | `gemini` | `gemini`, `groq` (needs `GROQ_API_KEY`) or `mock` (offline) |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Answer model when using Groq |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Answer model when using Groq |
 | `MAX_RETRIES` | `4` | Retries on temporary overload or per-minute limits |
 | `EVAL_DELAY_S` | `4` | Pause between evaluation questions |
 

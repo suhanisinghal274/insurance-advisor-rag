@@ -12,6 +12,7 @@ Run:  python -m src.evaluate
 """
 import csv
 import json
+import re
 import statistics
 import time
 
@@ -32,7 +33,8 @@ def run():
     # Answers are cached per model, so a run stopped by a daily quota resumes where it left off
     config.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     # The cache key includes the settings that change which answers the model is asked for
-    cache_path = config.RESULTS_DIR / f"answers_{bot.llm.model}_k{config.TOP_K}_t{config.ESCALATE_BELOW}.json"
+    safe_model = re.sub(r"[^A-Za-z0-9._-]", "_", bot.llm.model)  # e.g. openai/gpt-oss-120b -> openai_gpt-oss-120b
+    cache_path = config.RESULTS_DIR / f"answers_{safe_model}_k{config.TOP_K}_t{config.ESCALATE_BELOW}.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
     if cache:
         print(f"Resuming: {len(cache)}/{len(tests)} answers already saved for {bot.llm.model}")

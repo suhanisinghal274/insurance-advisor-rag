@@ -16,7 +16,7 @@ MINILM_MODEL = os.getenv("MINILM_MODEL", "sentence-transformers/all-MiniLM-L6-v2
 LLM_BACKEND = os.getenv("LLM_BACKEND", "gemini")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")  # check console.groq.com for current names
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")  # check console.groq.com for current names
 
 TOP_K = int(os.getenv("TOP_K", "4"))
 
