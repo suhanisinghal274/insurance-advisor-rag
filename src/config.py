@@ -12,9 +12,11 @@ CHROMA_DIR = ROOT / ".chroma"
 EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "minilm")
 MINILM_MODEL = os.getenv("MINILM_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
-# Answer model: "gemini" (needs GEMINI_API_KEY) or "mock" (no API, for offline tests)
+# Answer model: "gemini" (GEMINI_API_KEY), "groq" (GROQ_API_KEY) or "mock" (no API, for offline tests)
 LLM_BACKEND = os.getenv("LLM_BACKEND", "gemini")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")  # check console.groq.com for current names
 
 TOP_K = int(os.getenv("TOP_K", "4"))
 

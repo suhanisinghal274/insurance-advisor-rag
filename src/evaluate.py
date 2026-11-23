@@ -16,7 +16,7 @@ import statistics
 import time
 
 from src import config
-from src.rag import AdvisorAssistant
+from src.rag import AdvisorAssistant, QuotaExhausted
 
 
 def percentile(values, p):
@@ -28,11 +28,34 @@ def percentile(values, p):
 def run():
     tests = json.loads(config.TEST_SET.read_text(encoding="utf-8"))
     bot = AdvisorAssistant(persist=False)
-    rows = []
-    for i, t in enumerate(tests):
-        if i and config.LLM_BACKEND == "gemini":
+
+    # Answers are cached per model, so a run stopped by a daily quota resumes where it left off
+    config.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    # The cache key includes the settings that change which answers the model is asked for
+    cache_path = config.RESULTS_DIR / f"answers_{bot.llm.model}_k{config.TOP_K}_t{config.ESCALATE_BELOW}.json"
+    cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
+    if cache:
+        print(f"Resuming: {len(cache)}/{len(tests)} answers already saved for {bot.llm.model}")
+
+    calls = 0
+    for t in tests:
+        if t["id"] in cache:
+            continue
+        if calls and config.LLM_BACKEND != "mock":
             time.sleep(config.EVAL_DELAY_S)  # stay under free-tier per-minute limits (not counted in latency)
-        out = bot.answer(t["question"])
+        try:
+            cache[t["id"]] = bot.answer(t["question"])
+        except QuotaExhausted as e:
+            cache_path.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+            print(f"\nStopped: {e}\nSaved {len(cache)}/{len(tests)} answers to {cache_path.name}. "
+                  "Run this again after the quota resets to finish; saved answers won't be re-sent.")
+            return None
+        calls += 1
+        cache_path.write_text(json.dumps(cache, indent=2), encoding="utf-8")
+
+    rows = []
+    for t in tests:
+        out = cache[t["id"]]
         ids = [s["id"] for s in out["sources"]]
         row = {"id": t["id"], "question": t["question"], "answerable": t["answerable"],
                "escalated": out["escalated"], "top_score": out["top_score"],
@@ -64,7 +87,7 @@ def run():
         "latency_p50_ms": percentile(lat, 50),
         "latency_p95_ms": percentile(lat, 95),
         "settings": {"embeddings": config.EMBEDDING_BACKEND, "llm": config.LLM_BACKEND,
-                     "model": config.GEMINI_MODEL if config.LLM_BACKEND == "gemini" else "mock",
+                     "model": bot.llm.model,
                      "top_k": config.TOP_K, "escalate_below": config.ESCALATE_BELOW},
     }
 

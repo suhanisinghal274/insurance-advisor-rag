@@ -13,6 +13,8 @@ Built with Claude (Anthropic) as an AI pair-programmer.
 3. **Decide**: if the best match scores below a threshold, the question is handed to a human. Otherwise the sections go to **Gemini** with instructions to answer only from them, cite every fact, and reply `ESCALATE` if the answer isn't there.
 4. **Evaluate** (`src/evaluate.py`): 30 test questions (24 answerable, 6 the documents can't answer) are scored automatically.
 
+**Reliability:** model calls retry temporary overload (503) and per-minute limits (429) with exponential backoff; a daily-quota error stops the run cleanly, and saved answers let the evaluation resume without re-sending requests. Retry waits are excluded from latency.
+
 ## Evaluation
 
 Run `python -m src.evaluate` (or section 6 of the Colab notebook). Results are written to `eval/results/`.
@@ -52,11 +54,14 @@ docker run -p 7860:7860 -e GEMINI_API_KEY=your_key insurance-advisor-rag
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `GEMINI_MODEL` | `gemini-3.8-flash` | Answer model |
+| `GEMINI_MODEL` | `gemini-3.5-flash` | Answer model |
 | `TOP_K` | `4` | Sections retrieved per question |
 | `ESCALATE_BELOW` | `0.35` | Hand off if the best section scores below this |
 | `EMBEDDING_BACKEND` | `minilm` | `minilm` or `tfidf` (offline) |
-| `LLM_BACKEND` | `gemini` | `gemini` or `mock` (offline) |
+| `LLM_BACKEND` | `gemini` | `gemini`, `groq` (needs `GROQ_API_KEY`) or `mock` (offline) |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Answer model when using Groq |
+| `MAX_RETRIES` | `4` | Retries on temporary overload or per-minute limits |
+| `EVAL_DELAY_S` | `4` | Pause between evaluation questions |
 
 ## Limitations and next steps
 
